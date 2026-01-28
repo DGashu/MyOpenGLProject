@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/rachm/Documents/Programacion/C++/MyOpenGLProject/build/cmake_install.cmake",
+		"C:/Users/rachm/Documents/Programacion/C++/MyOpenGLProject/build/external/glfw/cmake_install.cmake",
+		"C:/Users/rachm/Documents/Programacion/C++/MyOpenGLProject/build/external/glfw/src/cmake_install.cmake",
+		"C:/Users/rachm/Documents/Programacion/C++/MyOpenGLProject/build/external/glfw/docs/cmake_install.cmake",
+		"C:/Users/rachm/Documents/Programacion/C++/MyOpenGLProject/build/external/glad/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
