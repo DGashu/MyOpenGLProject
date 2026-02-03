@@ -149,7 +149,10 @@ bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2)
     glCompileShader(vertexShader);
     
     if(!checkShaderCompilation(vertexShader, VERTEX))
+    {
+        glDeleteShader(vertexShader);
         return false;
+    }
 
     unsigned int fragmentShader, fragmentShader2;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -158,25 +161,48 @@ bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2)
     glCompileShader(fragmentShader);
     
     if(!checkShaderCompilation(fragmentShader, FRAGMENT1))
+    {
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
         return false;
+    }
 
     glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
     glCompileShader(fragmentShader2);
 
     if(!checkShaderCompilation(fragmentShader2, FRAGMENT2))
+    {
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        glDeleteShader(fragmentShader2);
         return false;
+    }
     
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
     if(!checkProgramLink(shaderProgram, PROGRAM1))
+    {
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        glDeleteShader(fragmentShader2);
+        glDeleteProgram(shaderProgram);
         return false;
+    }
+        
     
     glAttachShader(shaderProgram2, vertexShader);
     glAttachShader(shaderProgram2, fragmentShader2);
     glLinkProgram(shaderProgram2);
     if(!checkProgramLink(shaderProgram2, PROGRAM2))
+    {
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        glDeleteShader(fragmentShader2);
+        glDeleteProgram(shaderProgram);
+        glDeleteProgram(shaderProgram2);
         return false;
+    }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
     glDeleteShader(fragmentShader2);
