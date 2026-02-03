@@ -2,11 +2,21 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <fstream>
+enum ShaderType {
+    VERTEX,
+    FRAGMENT1,
+    FRAGMENT2
+};
+enum ProgramId {
+    PROGRAM1,
+    PROGRAM2
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
 void processInput(GLFWwindow *);
-void shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2);
-
+bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2);
+bool checkShaderCompilation(GLuint shader, ShaderType);
+bool checkProgramLink(GLuint program, ProgramId);
 const char *vertexShaderSource = "#version 330\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -61,7 +71,11 @@ int main()
     unsigned int shaderProgram, shaderProgram2;
     shaderProgram = glCreateProgram();
     shaderProgram2 = glCreateProgram();
-    shaderCreation(shaderProgram, shaderProgram2);
+    if(!shaderCreation(shaderProgram, shaderProgram2))
+    {
+        std::cout << "shader setup failed";
+        return-1;
+    }
     
     float vertices[] = {
      0.5f,  0.5f, 0.0f,  // top right
@@ -128,40 +142,99 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-void shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2)
+bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2)
 {
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader,1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
     
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    
-    if(!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
+    if(!checkShaderCompilation(vertexShader, VERTEX))
+        return false;
 
     unsigned int fragmentShader, fragmentShader2;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
+    
+    if(!checkShaderCompilation(fragmentShader, FRAGMENT1))
+        return false;
+
     glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
     glCompileShader(fragmentShader2);
 
+    if(!checkShaderCompilation(fragmentShader2, FRAGMENT2))
+        return false;
     
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    if(!checkProgramLink(shaderProgram, PROGRAM1))
+        return false;
     
     glAttachShader(shaderProgram2, vertexShader);
     glAttachShader(shaderProgram2, fragmentShader2);
     glLinkProgram(shaderProgram2);
+    if(!checkProgramLink(shaderProgram2, PROGRAM2))
+        return false;
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
     glDeleteShader(fragmentShader2);
+    return true;
+}
+
+bool checkShaderCompilation(GLuint shader, ShaderType type)
+{
+    int success;
+    char infoLog[512];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    
+    if(!success)
+    {
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+
+        switch(type)
+        {
+            case VERTEX:
+                std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n";
+                break;
+
+            case FRAGMENT1:
+                std::cout << "ERROR::SHADER::FRAGMENT1::COMPILATION_FAILED\n";
+                break;
+
+            case FRAGMENT2:
+                std::cout << "ERROR::SHADER::FRAGMENT2::COMPILATION_FAILED\n";
+                break;
+            
+        }
+        std::cout << infoLog << std::endl;
+        return false;
+    }
+    return true;
+}
+bool checkProgramLink(GLuint program, ProgramId programid)
+{
+    int success;
+    char infoLog[512];
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    
+    if(!success)
+    {
+        glGetProgramInfoLog(program,512, NULL, infoLog);
+
+        switch(programid)
+        {
+            case PROGRAM1:
+                std:: cout << "ERROR::PROGRAM1::LINK_FAILED\n";
+                break;
+
+            case PROGRAM2:
+                std:: cout << "ERROR::PROGRAM2::LINK_FAILED\n";
+                break;
+        }
+        std::cout << infoLog << std::endl;
+        return false;
+    }
+    return true;
 }
