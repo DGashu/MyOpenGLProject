@@ -4,8 +4,7 @@
 #include <fstream>
 enum ShaderType {
     VERTEX,
-    FRAGMENT1,
-    FRAGMENT2
+    FRAGMENT
 };
 enum ProgramId {
     PROGRAM1,
@@ -14,9 +13,9 @@ enum ProgramId {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
 void processInput(GLFWwindow *);
-bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2);
+bool shaderCreation(unsigned int &shaderProgram);
 bool checkShaderCompilation(GLuint shader, ShaderType);
-bool checkProgramLink(GLuint program, ProgramId);
+bool checkProgramLink(GLuint program);
 const char *vertexShaderSource = "#version 330\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -25,15 +24,10 @@ const char *vertexShaderSource = "#version 330\n"
     "}\0";
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 ourColor;"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n\0";
-const char *fragmentShaderSource2 = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+    "   FragColor = ourColor;\n"
     "}\n\0";
 
 int main()
@@ -71,7 +65,7 @@ int main()
     unsigned int shaderProgram, shaderProgram2;
     shaderProgram = glCreateProgram();
     shaderProgram2 = glCreateProgram();
-    if(!shaderCreation(shaderProgram, shaderProgram2))
+    if(!shaderCreation(shaderProgram))
     {
         std::cout << "shader setup failed";
         return-1;
@@ -111,10 +105,14 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
         
         glUseProgram(shaderProgram);
+
+
         
         glBindVertexArray(VAO);
+        glUniform4f(glGetUniformLocation(shaderProgram, "ourColor"),1.0f, 0.5f, 0.2f, 1.0f);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glUseProgram(shaderProgram2);
+        glUniform4f(glGetUniformLocation(shaderProgram, "ourColor"),1.0f, 1.0f, 0.0f, 1.0f);
+
         glDrawArrays(GL_TRIANGLES,3, 3 );
         
         glBindVertexArray(0);
@@ -126,7 +124,6 @@ int main()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
-    glDeleteProgram(shaderProgram2);
 
     glfwTerminate();
     return 0;
@@ -142,7 +139,7 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2)
+bool shaderCreation(unsigned int &shaderProgram)
 {
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader,1, &vertexShaderSource, NULL);
@@ -160,52 +157,27 @@ bool shaderCreation(unsigned int &shaderProgram, unsigned int &shaderProgram2)
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
     
-    if(!checkShaderCompilation(fragmentShader, FRAGMENT1))
+    if(!checkShaderCompilation(fragmentShader, FRAGMENT))
     {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-        return false;
-    }
-
-    glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
-    glCompileShader(fragmentShader2);
-
-    if(!checkShaderCompilation(fragmentShader2, FRAGMENT2))
-    {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        glDeleteShader(fragmentShader2);
         return false;
     }
     
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-    if(!checkProgramLink(shaderProgram, PROGRAM1))
+    if(!checkProgramLink(shaderProgram))
     {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-        glDeleteShader(fragmentShader2);
         glDeleteProgram(shaderProgram);
         return false;
     }
-        
     
-    glAttachShader(shaderProgram2, vertexShader);
-    glAttachShader(shaderProgram2, fragmentShader2);
-    glLinkProgram(shaderProgram2);
-    if(!checkProgramLink(shaderProgram2, PROGRAM2))
-    {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        glDeleteShader(fragmentShader2);
-        glDeleteProgram(shaderProgram);
-        glDeleteProgram(shaderProgram2);
-        return false;
-    }
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    glDeleteShader(fragmentShader2);
+
     return true;
 }
 
@@ -225,12 +197,8 @@ bool checkShaderCompilation(GLuint shader, ShaderType type)
                 std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n";
                 break;
 
-            case FRAGMENT1:
+            case FRAGMENT:
                 std::cout << "ERROR::SHADER::FRAGMENT1::COMPILATION_FAILED\n";
-                break;
-
-            case FRAGMENT2:
-                std::cout << "ERROR::SHADER::FRAGMENT2::COMPILATION_FAILED\n";
                 break;
             
         }
@@ -239,7 +207,7 @@ bool checkShaderCompilation(GLuint shader, ShaderType type)
     }
     return true;
 }
-bool checkProgramLink(GLuint program, ProgramId programid)
+bool checkProgramLink(GLuint program)
 {
     int success;
     char infoLog[512];
@@ -248,18 +216,7 @@ bool checkProgramLink(GLuint program, ProgramId programid)
     if(!success)
     {
         glGetProgramInfoLog(program,512, NULL, infoLog);
-
-        switch(programid)
-        {
-            case PROGRAM1:
-                std:: cout << "ERROR::PROGRAM1::LINK_FAILED\n";
-                break;
-
-            case PROGRAM2:
-                std:: cout << "ERROR::PROGRAM2::LINK_FAILED\n";
-                break;
-        }
-        std::cout << infoLog << std::endl;
+        std:: cout << "ERROR::PROGRAM1::LINK_FAILED\n"<< infoLog << std::endl;
         return false;
     }
     return true;
