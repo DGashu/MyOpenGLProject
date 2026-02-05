@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 enum ShaderType {
     VERTEX,
     FRAGMENT
@@ -71,13 +72,9 @@ int main()
     }
     
     float vertices[] = {
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-     -0.5f,  0.5f, 0.0f,
-
-     0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
+     0.0f,  0.5,  0.0f, // top right
+     0.5f, -0.5f, 0.0f, // bottom right
+    -0.5f, -0.5f, 0.0f, // bottom left
     };
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -95,6 +92,7 @@ int main()
     glBindVertexArray(0);
 
     int colorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+    
     //Running the window
     while (!glfwWindowShouldClose(window))
     {
@@ -108,11 +106,10 @@ int main()
 
         
         glBindVertexArray(VAO);
-        glUniform4f(colorLocation,1.0f, 0.5f, 0.2f, 1.0f);
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue)/2.0f+0.5f;
+        glUniform4f(colorLocation,0.0f, greenValue, 0.0f, 1.0f);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glUniform4f(colorLocation,1.0f, 1.0f, 0.0f, 1.0f);
-
-        glDrawArrays(GL_TRIANGLES,3, 3 );
         
         glBindVertexArray(0);
         
