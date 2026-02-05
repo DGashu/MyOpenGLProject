@@ -62,9 +62,8 @@ int main()
     }
     
     //Compiling shaders and creating shader program
-    unsigned int shaderProgram, shaderProgram2;
+    unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
-    shaderProgram2 = glCreateProgram();
     if(!shaderCreation(shaderProgram))
     {
         std::cout << "shader setup failed";
@@ -95,7 +94,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindVertexArray(0);
 
-
+    int colorLocation = glGetUniformLocation(shaderProgram, "ourColor");
     //Running the window
     while (!glfwWindowShouldClose(window))
     {
@@ -109,9 +108,9 @@ int main()
 
         
         glBindVertexArray(VAO);
-        glUniform4f(glGetUniformLocation(shaderProgram, "ourColor"),1.0f, 0.5f, 0.2f, 1.0f);
+        glUniform4f(colorLocation,1.0f, 0.5f, 0.2f, 1.0f);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glUniform4f(glGetUniformLocation(shaderProgram, "ourColor"),1.0f, 1.0f, 0.0f, 1.0f);
+        glUniform4f(colorLocation,1.0f, 1.0f, 0.0f, 1.0f);
 
         glDrawArrays(GL_TRIANGLES,3, 3 );
         
@@ -151,9 +150,8 @@ bool shaderCreation(unsigned int &shaderProgram)
         return false;
     }
 
-    unsigned int fragmentShader, fragmentShader2;
+    unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
     
