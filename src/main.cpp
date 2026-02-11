@@ -1,38 +1,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include "shader_s.h"
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
-enum ShaderType {
-    VERTEX,
-    FRAGMENT
-};
-enum ProgramId {
-    PROGRAM1,
-    PROGRAM2
-};
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
 void processInput(GLFWwindow *);
-bool shaderCreation(unsigned int &shaderProgram);
-bool checkShaderCompilation(GLuint shader, ShaderType);
-bool checkProgramLink(GLuint program);
-const char *vertexShaderSource = "#version 330\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   ourColor = aColor;"
-    "}\0";
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(ourColor, 1.0);\n"
-    "}\n\0";
+
 
 int main()
 {
@@ -59,21 +37,16 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    //Loading GLAD
+    //Loading GLAD  
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to init GLAD\n";
         return -1;
     }
     
     //Compiling shaders and creating shader program
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-    if(!shaderCreation(shaderProgram))
-    {
-        std::cout << "shader setup failed";
-        return-1;
-    }
     
+    Shader ourShader("shader.vs", "shader.fs");
+
     float vertices[] = {
      0.0f,  0.5,  0.0f,  1.0f, 0.0f, 0.0f,// top right
      0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,// bottom right
@@ -104,11 +77,8 @@ int main()
          
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        
-        glUseProgram(shaderProgram);
 
-
-        
+        ourShader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         
@@ -120,7 +90,6 @@ int main()
     }
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
 
     glfwTerminate();
     return 0;
@@ -136,84 +105,3 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-bool shaderCreation(unsigned int &shaderProgram)
-{
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader,1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    
-    if(!checkShaderCompilation(vertexShader, VERTEX))
-    {
-        glDeleteShader(vertexShader);
-        return false;
-    }
-
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    
-    if(!checkShaderCompilation(fragmentShader, FRAGMENT))
-    {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        return false;
-    }
-    
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    if(!checkProgramLink(shaderProgram))
-    {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        glDeleteProgram(shaderProgram);
-        return false;
-    }
-    
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return true;
-}
-
-bool checkShaderCompilation(GLuint shader, ShaderType type)
-{
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    
-    if(!success)
-    {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-
-        switch(type)
-        {
-            case VERTEX:
-                std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n";
-                break;
-
-            case FRAGMENT:
-                std::cout << "ERROR::SHADER::FRAGMENT1::COMPILATION_FAILED\n";
-                break;
-            
-        }
-        std::cout << infoLog << std::endl;
-        return false;
-    }
-    return true;
-}
-bool checkProgramLink(GLuint program)
-{
-    int success;
-    char infoLog[512];
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    
-    if(!success)
-    {
-        glGetProgramInfoLog(program,512, NULL, infoLog);
-        std:: cout << "ERROR::PROGRAM1::LINK_FAILED\n"<< infoLog << std::endl;
-        return false;
-    }
-    return true;
-}
